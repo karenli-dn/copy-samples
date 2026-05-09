@@ -899,7 +899,14 @@ const CLIENT_SHEETS = {
 // Sheet → CSV
 // ═══════════════════════════════════════════════════════════
 function buildSheetCsvUrl(sheetId, sheetName) {
+  // 使用 export 端點 — 對 CSV 匯入的 Sheet 兼容性更好
+  // 注意：這個端點不需要 sheet 參數的話會抓第一個分頁
   return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+}
+
+// 改用 export 端點（更穩定的備援）
+function buildSheetCsvUrlAlt(sheetId, sheetGid) {
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${sheetGid}`;
 }
 
 function parseCsv(text) {
@@ -926,11 +933,34 @@ function parseCsv(text) {
 async function loadParts(client) {
   const sheetName = CLIENT_SHEETS[client];
   if (!sheetName) throw new Error('沒有對應的分頁設定: ' + client);
-  const url = buildSheetCsvUrl(SHEET_ID, sheetName);
-  const res = await fetch(url);
+
+  // 先試 gviz 端點
+  let url = buildSheetCsvUrl(SHEET_ID, sheetName);
+  console.log('[loadParts] fetching:', url);
+  let res = await fetch(url);
   if (!res.ok) throw new Error(`Sheet 抓取失敗 (HTTP ${res.status})`);
-  const text = await res.text();
-  const rows = parseCsv(text);
+  let text = await res.text();
+  console.log('[loadParts] got CSV bytes:', text.length, 'first 200 chars:', text.substring(0, 200));
+
+  let rows = parseCsv(text);
+  console.log('[loadParts] parsed rows:', rows.length, 'first row:', rows[0]);
+
+  // 如果只有 0-1 行，可能是抓錯分頁，改用 gid=0 試試
+  if (rows.length <= 1) {
+    console.warn('[loadParts] gviz 抓到 0 行，改用 export?format=csv&gid=0');
+    url = buildSheetCsvUrlAlt(SHEET_ID, '0');
+    console.log('[loadParts] fallback fetching:', url);
+    res = await fetch(url);
+    if (res.ok) {
+      text = await res.text();
+      console.log('[loadParts] fallback CSV bytes:', text.length);
+      rows = parseCsv(text);
+      console.log('[loadParts] fallback parsed rows:', rows.length);
+    }
+  }
+
+  if (!rows.length) throw new Error('解析出 0 行，請檢查 Sheet 內容');
+
   const header = rows[0].map(h => h.trim());
   const idx = {
     category: header.indexOf('category'),
@@ -940,6 +970,8 @@ async function loadParts(client) {
     tone: header.indexOf('tone'),
     note: header.indexOf('note')
   };
+  console.log('[loadParts] header:', header, 'indexes:', idx);
+
   const parts = [];
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
@@ -953,6 +985,7 @@ async function loadParts(client) {
       note: (r[idx.note] || '').trim()
     });
   }
+  console.log('[loadParts] final parts count:', parts.length);
   return parts;
 }
 
