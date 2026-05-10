@@ -232,8 +232,7 @@ aside {
   letter-spacing: -0.01em;
 }
 .sheet-status.ok {
-  background: rgba(70, 165, 219, 0.08);
-  color: var(--ink-black);
+  display: none;
 }
 .sheet-status.err {
   background: rgba(202, 27, 31, 0.08);
@@ -834,7 +833,7 @@ main {
       <span class="accent">a place to look, not a machine to replace.</span>
     </h1>
     <p class="hero-sub">
-      累積品牌過去的好文案，整理成可參考的範例。<br>
+      從品牌的視覺與文案慣性出發，整理出一份可參考的範例庫。<br>
       你寫新文案時來看看，挑得到的就用，不對勁就改。
     </p>
   </section>
@@ -986,7 +985,7 @@ main {
 // 零件來源：本地 CSV（同 repo 的 parts.csv）
 // ═══════════════════════════════════════════════════════════
 const CLIENT_CSV = {
-  dermacept: './parts.csv'
+  dermacept: './parts-dermacept.csv'
   // 將來新增客戶：masu: './parts-masu.csv'
 };
 
