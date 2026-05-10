@@ -941,17 +941,6 @@ const CLIENT_CSV = {
 // ═══════════════════════════════════════════════════════════
 // Sheet → CSV
 // ═══════════════════════════════════════════════════════════
-function buildSheetCsvUrl(sheetId, sheetName) {
-  // 使用 export 端點 — 對 CSV 匯入的 Sheet 兼容性更好
-  // 注意：這個端點不需要 sheet 參數的話會抓第一個分頁
-  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-}
-
-// 改用 export 端點（更穩定的備援）
-function buildSheetCsvUrlAlt(sheetId, sheetGid) {
-  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${sheetGid}`;
-}
-
 function parseCsv(text) {
   const rows = [];
   let row = [], cell = '', inQuote = false;
@@ -974,48 +963,28 @@ function parseCsv(text) {
 }
 
 async function loadParts(client) {
-  const sheetName = CLIENT_SHEETS[client];
-  if (!sheetName) throw new Error('沒有對應的分頁設定: ' + client);
+  const csvPath = CLIENT_CSV[client];
+  if (!csvPath) throw new Error('沒有對應的 CSV 設定: ' + client);
 
-  // 主要端點：使用 export?format=csv&gid=0（更穩定）
-  // gid=0 是第一個分頁，不管它叫什麼名字
-  let url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
-  console.log('[loadParts] PRIMARY fetching:', url);
-  let res = await fetch(url);
-  console.log('[loadParts] response status:', res.status, 'ok:', res.ok, 'type:', res.type);
-  console.log('[loadParts] response headers content-type:', res.headers.get('content-type'));
+  // 加上 cache buster 避免瀏覽器快取舊 CSV
+  const url = `${csvPath}?t=${Date.now()}`;
+  console.log('[loadParts] fetching local CSV:', url);
+
+  const res = await fetch(url);
+  console.log('[loadParts] response status:', res.status, 'ok:', res.ok);
 
   if (!res.ok) {
-    throw new Error(`Sheet 抓取失敗 (HTTP ${res.status})`);
+    throw new Error(`CSV 抓取失敗 (HTTP ${res.status}) — 確認 ${csvPath} 跟 index.html 在同一層`);
   }
 
-  let text = await res.text();
+  const text = await res.text();
   console.log('[loadParts] got CSV bytes:', text.length);
-  console.log('[loadParts] first 300 chars:', text.substring(0, 300));
-  console.log('[loadParts] last 100 chars:', text.substring(text.length - 100));
+  console.log('[loadParts] first 200 chars:', text.substring(0, 200));
 
-  let rows = parseCsv(text);
+  const rows = parseCsv(text);
   console.log('[loadParts] parsed rows count:', rows.length);
-  if (rows.length > 0) console.log('[loadParts] first row (header):', rows[0]);
-  if (rows.length > 1) console.log('[loadParts] second row:', rows[1]);
 
-  // 備援：如果失敗，試 gviz 端點
-  if (rows.length <= 1) {
-    console.warn('[loadParts] export 端點抓到 0 行，改試 gviz');
-    url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-    console.log('[loadParts] FALLBACK fetching:', url);
-    res = await fetch(url);
-    if (res.ok) {
-      text = await res.text();
-      console.log('[loadParts] fallback CSV bytes:', text.length, 'first 200 chars:', text.substring(0, 200));
-      rows = parseCsv(text);
-      console.log('[loadParts] fallback parsed rows:', rows.length);
-    }
-  }
-
-  if (!rows.length) {
-    throw new Error('解析出 0 行，可能是 CSV 格式問題');
-  }
+  if (!rows.length) throw new Error('CSV 解析失敗');
 
   const header = rows[0].map(h => h.trim());
   const idx = {
@@ -1026,11 +995,10 @@ async function loadParts(client) {
     tone: header.indexOf('tone'),
     note: header.indexOf('note')
   };
-  console.log('[loadParts] header detected:', header);
-  console.log('[loadParts] column indexes:', idx);
+  console.log('[loadParts] header:', header);
 
   if (idx.category < 0 || idx.value < 0) {
-    throw new Error(`找不到必要欄位 category 或 value，實際欄位：${header.join(', ')}`);
+    throw new Error(`找不到必要欄位，實際欄位：${header.join(', ')}`);
   }
 
   const parts = [];
@@ -1047,7 +1015,6 @@ async function loadParts(client) {
     });
   }
   console.log('[loadParts] FINAL parts count:', parts.length);
-  if (parts.length > 0) console.log('[loadParts] first 3 parts:', parts.slice(0, 3));
   return parts;
 }
 
@@ -1171,20 +1138,20 @@ function setStatus(type, title, detail) {
 
 async function reload() {
   $('#generate').disabled = true;
-  setStatus('', '正在載入零件庫…', '從 Google Sheet 讀取中');
+  setStatus('', '正在載入零件庫…', '從本地 parts.csv 讀取中');
   try {
     const parts = await loadParts(state.client);
     state.parts = parts;
-    const sheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+    const csvUrl = CLIENT_CSV[state.client];
     if (parts.length === 0) {
-      setStatus('err', '⚠ 載入到 0 條（fetch 成功但沒解析出資料）', `請打開瀏覽器 Console 看詳細訊息（F12）<br><a href="${sheetUrl}" target="_blank">開啟 Sheet 檢查 ↗</a>`);
+      setStatus('err', '⚠ 載入到 0 條（fetch 成功但沒解析出資料）', `請打開瀏覽器 Console 看詳細訊息（F12）`);
     } else {
-      setStatus('ok', `已載入 ${parts.length} 條零件`, `<a href="${sheetUrl}" target="_blank">開啟 Sheet 編輯 ↗</a>`);
+      setStatus('ok', `已載入 ${parts.length} 條零件`, `來源：${csvUrl}`);
       $('#generate').disabled = false;
     }
   } catch (e) {
     console.error(e);
-    setStatus('err', '載入失敗', e.message + '<br>請確認 Sheet 已公開為「知道連結的人可檢視」');
+    setStatus('err', '載入失敗', e.message + '<br>請確認 parts.csv 跟 index.html 在同一個資料夾');
   }
 }
 
