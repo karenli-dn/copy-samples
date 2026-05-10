@@ -676,6 +676,28 @@ main {
   gap: 6px;
 }
 
+.prompt-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.06);
+}
+
+.prompt-control-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prompt-control-label {
+  font-size: 12px;
+  color: var(--slate);
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+
 .prompt-tab {
   padding: 7px 14px;
   background: var(--snow);
@@ -862,11 +884,24 @@ main {
     <div class="prompt-head">
       <div class="prompt-title-wrap">
         <div class="prompt-title">GPT 視覺生成 Prompt</div>
-        <div class="prompt-subtitle">複製貼到 ChatGPT / Midjourney / DALL·E，產出符合品牌調性的視覺</div>
+        <div class="prompt-subtitle">業務找一張參考圖（圖二），複製下方 prompt，連同參考圖一起貼到 GPT</div>
       </div>
-      <div class="prompt-tab-row" id="prompt-tabs">
-        <button class="prompt-tab active" data-size="1080x1080">1080×1080 方版</button>
-        <button class="prompt-tab" data-size="1920x1080">1920×1080 橫版</button>
+    </div>
+
+    <div class="prompt-controls">
+      <div class="prompt-control-group">
+        <span class="prompt-control-label">尺寸</span>
+        <div class="prompt-tab-row" id="prompt-size-tabs">
+          <button class="prompt-tab active" data-size="1080x1080">1080×1080 方版</button>
+          <button class="prompt-tab" data-size="1920x1080">1920×1080 橫版</button>
+        </div>
+      </div>
+      <div class="prompt-control-group">
+        <span class="prompt-control-label">版本</span>
+        <div class="prompt-tab-row" id="prompt-mode-tabs">
+          <button class="prompt-tab active" data-mode="short">簡短版</button>
+          <button class="prompt-tab" data-mode="long">完整版</button>
+        </div>
       </div>
     </div>
 
@@ -876,8 +911,8 @@ main {
     </div>
 
     <p class="prompt-hint">
-      💡 使用方式：先在上方產生文案範例，<strong>複製主標+副標</strong>，貼進 GPT 後告訴它「請依此 prompt 產出視覺」。
-      生成後的圖片可以再加上你 dermacept 的標準 logo。
+      💡 <strong>使用流程</strong>：① 上方產生範例 → ② 複製想要的主副標 → ③ 業務找一張「想要這種感覺」的參考圖 → ④ 複製下方 prompt → ⑤ 開 ChatGPT，<strong>把參考圖（標為圖二）+ prompt 一起傳給 GPT</strong>。<br>
+      <strong>簡短版</strong>適合 GPT-4o / Gemini 即時對話用；<strong>完整版</strong>適合 Midjourney / 嚴謹工作流用。
     </p>
   </section>
 
@@ -896,10 +931,11 @@ main {
 <script>
 // ═══════════════════════════════════════════════════════════
 // 設定區
+// 零件來源：本地 CSV（同 repo 的 parts.csv）
 // ═══════════════════════════════════════════════════════════
-const SHEET_ID = '1nIcxg4TeVNau3KRdE4Cg_Sir-ThrsAdpLp-BWAjJ-sY';
-const CLIENT_SHEETS = {
-  dermacept: 'Sheet1'
+const CLIENT_CSV = {
+  dermacept: './parts.csv'
+  // 將來新增客戶：masu: './parts-masu.csv'
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -1181,56 +1217,90 @@ $('#generate').addEventListener('click', () => {
 reload();
 
 // ═══════════════════════════════════════════════════════════
-// GPT Prompt 生成（依客戶 + 尺寸）
+// GPT Prompt 生成（依客戶 + 尺寸 + 模式）
 // ═══════════════════════════════════════════════════════════
 const PROMPT_TEMPLATES = {
   dermacept: {
     brand: 'Dermacept（日系藥妝品牌，主打高濃度純維他命C精華）',
-    colors: '深咖啡 #3D1E0E（主色，占 60%）、香檳金 #B8893E / #D4A857（強調金邊、文字）、米白 #F5E6C8（背景）、警示紅 #C8102E（價格、急迫感）、粉嫩 #F4D8D0（柔和點綴）',
+    colors: '深咖啡 #3D1E0E（主色約 60%）、香檳金 #B8893E / #D4A857（強調文字、金邊）、米白 #F5E6C8（背景）、警示紅 #C8102E（價格、急迫感）、粉嫩 #F4D8D0（柔和點綴）',
+    colorsShort: '深咖啡 #3D1E0E + 香檳金 #B8893E + 米白 #F5E6C8',
     style: '日系極致精緻、高級藥妝感、奢華中帶純粹科學感',
-    visualMotifs: '金光暈背景、實驗室玻璃器皿、緞帶康乃馨（節慶用）、滴管/精華液瓶身、純維他命C結晶光感、金色細線分隔',
-    typography: '中文使用 Yu Mincho Demibold（游明朝）或思源宋體；英文使用 Cormorant Garamond italic；標題粗體 + 細體混排，層次分明',
-    productHero: '產品瓶身置中或左側，金色光暈從瓶身放射；瓶身材質玻璃/金屬反射感',
+    typography: '中文：Yu Mincho Demibold / 思源宋體；英文：Cormorant Garamond italic',
     ctaStyle: '深咖啡圓角矩形按鈕 + 香檳金箭頭 ▶▶'
   }
 };
 
 const SIZE_SPECS = {
   '1080x1080': {
-    label: '1080×1080 方版（IG 貼文 / FB 貼文）',
-    layoutGuide: '正方形構圖，視覺重心置中。Logo 位於右上角（佔畫面 8%），主標位於上半部置中或左側，副標位於主標下方，價格與 CTA 位於下半部，CTA 按鈕距底邊 10% 留白。'
+    label: '1080×1080 方版（IG / FB 貼文）',
+    layoutShort: '方版構圖，Logo 右上角、主標上半、CTA 下半',
+    layoutLong: '正方形構圖，視覺重心置中。Logo 位於右上角（佔畫面 8%），主標位於上半部置中或左側，副標位於主標下方，價格與 CTA 位於下半部，CTA 按鈕距底邊 10% 留白。'
   },
   '1920x1080': {
-    label: '1920×1080 橫版（電商 Banner / 官網 Hero）',
-    layoutGuide: '左右分割構圖：左側 60% 放主視覺與文案（主標+副標+CTA 垂直堆疊），右側 40% 放產品瓶身置中。Logo 位於左上角（佔畫面寬度 8%），距邊距 5% 留白。'
+    label: '1920×1080 橫版（電商 Banner）',
+    layoutShort: '橫版構圖，左 60% 文案 + 右 40% 產品，Logo 左上角',
+    layoutLong: '左右分割構圖：左側 60% 放主視覺與文案（主標+副標+CTA 垂直堆疊），右側 40% 放產品瓶身置中。Logo 位於左上角（佔畫面寬度 8%），距邊距 5% 留白。'
   }
 };
 
-function buildPrompt(client, sizeKey) {
-  const t = PROMPT_TEMPLATES[client];
-  const s = SIZE_SPECS[sizeKey];
-  if (!t || !s) return '';
-
-  // 嘗試從目前已產生的範例中取第一筆當示範文案
+function getSampleCopy() {
   const root = document.querySelector('#results');
   const firstCard = root ? root.querySelector('.card') : null;
-  let sampleHeadline = '【在上方產生範例後，這裡會自動帶入主標】';
+  let sampleHeadline = '【請先在上方產生範例，這裡會自動帶入主標】';
   let sampleSub = '【副標】';
+  let samplePrice = '';
+  let sampleCta = '';
   if (firstCard) {
     const h = firstCard.querySelector('.card-headline');
     const sub = firstCard.querySelector('.card-sub');
+    const price = firstCard.querySelector('.card-price');
+    const cta = firstCard.querySelector('.card-cta');
     if (h) sampleHeadline = h.textContent.trim();
     if (sub) sampleSub = sub.textContent.trim();
+    if (price) samplePrice = price.textContent.trim();
+    if (cta) sampleCta = cta.textContent.trim();
   }
+  return { sampleHeadline, sampleSub, samplePrice, sampleCta };
+}
+
+function buildPromptShort(client, sizeKey) {
+  const t = PROMPT_TEMPLATES[client];
+  const s = SIZE_SPECS[sizeKey];
+  if (!t || !s) return '';
+  const { sampleHeadline, sampleSub, samplePrice, sampleCta } = getSampleCopy();
+
+  return `請參考我上傳的「圖二（風格參考）」的氛圍，幫我做一張 ${sizeKey} 的 ${t.brand.split('（')[0]} 電商視覺。
+
+文案：
+主標：${sampleHeadline}
+副標：${sampleSub}${samplePrice ? '\n價格：' + samplePrice : ''}${sampleCta ? '\nCTA：' + sampleCta : ''}
+
+風格：${t.style}
+配色：${t.colorsShort}
+版面：${s.layoutShort}
+
+請保留圖二的氛圍與構圖手法，但配色與細節要對齊上面的品牌規範。`;
+}
+
+function buildPromptLong(client, sizeKey) {
+  const t = PROMPT_TEMPLATES[client];
+  const s = SIZE_SPECS[sizeKey];
+  if (!t || !s) return '';
+  const { sampleHeadline, sampleSub, samplePrice, sampleCta } = getSampleCopy();
 
   return `請為「${t.brand}」設計一張 ${sizeKey} 的電商視覺。
 
+【參考圖】
+請參考我同時上傳的「圖二」作為視覺氛圍與構圖手法的參考。
+保留圖二的：光線質感、構圖節奏、產品呈現方式、留白比例。
+但需要替換為下方品牌規範的配色與字體。
+
 【尺寸規格】${s.label}
-【版型配置】${s.layoutGuide}
+【版型配置】${s.layoutLong}
 
 【文案內容】
 主標：${sampleHeadline}
-副標：${sampleSub}
+副標：${sampleSub}${samplePrice ? '\n價格資訊：' + samplePrice : ''}${sampleCta ? '\nCTA 按鈕：' + sampleCta : ''}
 
 【品牌色彩】
 ${t.colors}
@@ -1238,42 +1308,53 @@ ${t.colors}
 【視覺風格】
 ${t.style}
 
-【視覺元素】
-${t.visualMotifs}
-
 【字體建議】
 ${t.typography}
-
-【產品呈現】
-${t.productHero}
+標題粗體 + 細體混排，層次分明。
 
 【CTA 按鈕】
 ${t.ctaStyle}
 
 【其他要求】
 - 整體保留 15% 以上留白，避免擁擠
-- 金色光暈勿過亮，控制在 30% 不透明度以內
 - 主標必須清楚可讀，與背景對比度 ≥ 4.5:1
 - 不要使用過度卡通化或廉價感的元素
-- 產出風格：精品電商 / 日系專櫃藥妝海報感`;
+- 產出風格定位：精品電商 / 日系專櫃藥妝海報感
+- 若參考圖二與品牌規範衝突，以「品牌規範」為主、「參考圖氛圍」為輔`;
+}
+
+function buildPrompt(client, sizeKey, mode) {
+  return mode === 'long'
+    ? buildPromptLong(client, sizeKey)
+    : buildPromptShort(client, sizeKey);
 }
 
 const $promptBox = document.querySelector('#prompt-content');
 const $promptCopy = document.querySelector('#prompt-copy');
-const $promptTabs = document.querySelector('#prompt-tabs');
-let promptState = { size: '1080x1080' };
+const $promptSizeTabs = document.querySelector('#prompt-size-tabs');
+const $promptModeTabs = document.querySelector('#prompt-mode-tabs');
+let promptState = { size: '1080x1080', mode: 'short' };
 
 function renderPrompt() {
-  const text = buildPrompt(state.client, promptState.size);
+  const text = buildPrompt(state.client, promptState.size, promptState.mode);
   $promptBox.textContent = text;
 }
 
-$promptTabs.addEventListener('click', (e) => {
+$promptSizeTabs.addEventListener('click', (e) => {
   const b = e.target.closest('.prompt-tab');
   if (!b) return;
-  $promptTabs.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  $promptSizeTabs.querySelectorAll('button').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
   promptState.size = b.dataset.size;
+  renderPrompt();
+});
+
+$promptModeTabs.addEventListener('click', (e) => {
+  const b = e.target.closest('.prompt-tab');
+  if (!b) return;
+  $promptModeTabs.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  promptState.mode = b.dataset.mode;
   renderPrompt();
 });
 

@@ -1,0 +1,65 @@
+category,subcategory,value,scenario,tone,note
+headline_4,function,極效煥膚,*,*,功能訴求-通用
+headline_4,function,極效修護,*,*,功能訴求-通用
+headline_4,function,極效煥肌,*,*,功能訴求-通用
+headline_4,function,深層煥活,*,*,功能訴求-通用
+headline_4,function,逆轉肌齡,*,*,時間訴求
+headline_4,function,煥活光彩,*,*,結果訴求
+headline_4,luxury,緻禮尊享,festival,luxe,節慶限定
+headline_4,luxury,寵奢回饋,festival,luxe,節慶限定
+headline_4,luxury,尊榮鉅獻,festival,luxe,節慶限定
+headline_4,luxury,極選緻獻,festival,luxe,節慶限定
+headline_4,time,一滴喚活,*,*,瞬效感
+headline_4,time,24H 修護,*,*,全天感
+headline_4,time,瞬效逆齡,*,*,瞬效感
+headline_4,time,即刻煥膚,*,*,瞬效感
+headline_4,power,極限美容,award,*,程度極致
+headline_4,power,高濃度純粹,award,*,程度極致
+headline_4,power,純粹維他命C,award,*,純粹訴求
+headline_4,power,NEO 進化,newproduct,*,新品專用
+sub,product,高濃度純維他命C精華,*,*,標準產品介紹
+sub,product,極限美容液 25% 純維他命C,*,*,旗艦版
+sub,product,一滴逆轉肌齡 煥活年輕光彩,*,*,功效導向
+sub,product,NO.1 純維他命C精華,award,*,獎項導向
+sub,benefit,年度寵奢最高現省,festival,*,折扣導向
+sub,benefit,一滴喚活逆轉肌齡,*,*,功效導向
+sub,benefit,極致煥膚 純粹有感,*,*,感受導向
+sub,benefit,專業有感 立即驗證,*,clinical,專業導向
+prefix,festival,母親節,festival,*,
+prefix,festival,父親節,festival,*,
+prefix,festival,情人節,festival,*,
+prefix,festival,週年慶,festival,*,
+prefix,general,限時,general,*,
+prefix,general,本週,general,*,
+prefix,general,春季,general,*,
+prefix,general,會員專屬,general,*,
+prefix,award,日本美容大賞 134 冠王＊,award,*,需加註腳
+prefix,award,COSME 殿堂入賞,award,*,
+prefix,award,NO.1 純維他命C精華,award,*,
+prefix,newproduct,全新登場,newproduct,*,
+prefix,newproduct,NEO 升級,newproduct,*,
+prefix,newproduct,首度導入,newproduct,*,
+prefix,newproduct,日本同步,newproduct,*,
+price_pattern,*,年度寵奢最高現省 \${{N1}},*,luxe,奢華語氣
+price_pattern,*,滿額折後 \${{N2}}｜現省 \${{N3}},*,*,標準折扣
+price_pattern,*,首購限定 \${{N4}}起,*,urgent,首購
+price_pattern,*,C25 加購價 \${{N5}},*,*,加購
+cta,*,立即下單 ▶▶,*,*,標準
+cta,*,立即體驗 ▶▶,*,clinical,試用
+cta,*,立即搶購 ▶▶,*,urgent,急迫感
+cta,*,立即領取 ▶▶,*,*,贈品感
+price_value,N1,"1,170",*,*,折扣金額池
+price_value,N1,"1,805",*,*,折扣金額池
+price_value,N1,"2,580",*,*,折扣金額池
+price_value,N1,"3,580",*,*,折扣金額池
+price_value,N2,"4,630",*,*,
+price_value,N2,"8,245",*,*,
+price_value,N2,"6,890",*,*,
+price_value,N3,"1,170",*,*,
+price_value,N3,"1,805",*,*,
+price_value,N3,950,*,*,
+price_value,N4,899,*,*,
+price_value,N4,"1,199",*,*,
+price_value,N4,"1,499",*,*,
+price_value,N5,899,*,*,
+price_value,N5,"1,199",*,*,
