@@ -847,10 +847,12 @@ main {
       </div>
 
       <div class="field">
-        <label class="field-label">Client 客戶</label>
+        <label class="field-label">Client 客戶 / 產品線</label>
         <div class="select-wrap">
           <select id="client">
-            <option value="dermacept">Dermacept</option>
+            <option value="dermacept-vitaminc">Dermacept · 維他命C 系列</option>
+            <option value="dermacept-stemlift">Dermacept · Stem Lift</option>
+            <option value="dermacept-acid">Dermacept · 五重酸</option>
           </select>
         </div>
       </div>
@@ -858,27 +860,16 @@ main {
       <div class="field">
         <label class="field-label">Scenario 情境</label>
         <div class="btn-grid" id="scenarios">
-          <button class="opt-btn active" data-val="festival">節慶</button>
-          <button class="opt-btn" data-val="general">一般折扣</button>
+          <button class="opt-btn active" data-val="general">一般折扣</button>
           <button class="opt-btn" data-val="award">獎項背書</button>
           <button class="opt-btn" data-val="newproduct">新品</button>
         </div>
       </div>
 
-      <div class="field" id="festival-field">
+      <div class="field hidden" id="festival-field" style="display:none">
         <label class="field-label">Festival 檔期</label>
         <div class="btn-grid btn-grid-3" id="festivals">
           <button class="opt-btn active" data-val="*">不限</button>
-          <button class="opt-btn" data-val="母親節">母親節</button>
-          <button class="opt-btn" data-val="父親節">父親節</button>
-          <button class="opt-btn" data-val="情人節">情人節</button>
-          <button class="opt-btn" data-val="週年慶">週年慶</button>
-          <button class="opt-btn" data-val="雙11">雙11</button>
-          <button class="opt-btn" data-val="雙12">雙12</button>
-          <button class="opt-btn" data-val="聖誕">聖誕</button>
-          <button class="opt-btn" data-val="新春">新春</button>
-          <button class="opt-btn" data-val="生日月">生日月</button>
-          <button class="opt-btn" data-val="女神節">女神節</button>
         </div>
       </div>
 
@@ -984,9 +975,14 @@ main {
 // 設定區
 // 零件來源：本地 CSV（同 repo 的 parts.csv）
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// 設定區
+// 零件來源：本地 CSV（同 repo 的 parts-XXX.csv）
+// ═══════════════════════════════════════════════════════════
 const CLIENT_CSV = {
-  dermacept: './parts-dermacept.csv'
-  // 將來新增客戶：masu: './parts-masu.csv'
+  'dermacept-vitaminc': './parts-dermacept-vitaminc.csv',
+  'dermacept-stemlift': './parts-dermacept-stemlift.csv',
+  'dermacept-acid': './parts-dermacept-acid.csv'
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -1015,7 +1011,8 @@ function parseCsv(text) {
 
 async function loadParts(client) {
   const csvPath = CLIENT_CSV[client];
-  if (!csvPath) throw new Error('沒有對應的 CSV 設定: ' + client);
+  if (csvPath === undefined) throw new Error('沒有對應的客戶設定: ' + client);
+  if (csvPath === null) throw new Error('這個產品線的零件庫還沒建立 — 請聯絡設計部');
 
   // 加上 cache buster 避免瀏覽器快取舊 CSV
   const url = `${csvPath}?t=${Date.now()}`;
@@ -1224,7 +1221,7 @@ function highlightPrice(s) { return s.replace(/\$([0-9,]+)/g, '$<span class="num
 function escAttr(s) { return s.replace(/"/g, '&quot;').replace(/\n/g, '&#10;'); }
 function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-let state = { client: 'dermacept', scenario: 'festival', tone: '*', festival: '*', count: 5, parts: null };
+let state = { client: 'dermacept-vitaminc', scenario: 'general', tone: '*', festival: '*', count: 5, parts: null };
 
 function setStatus(type, title, detail) {
   const el = $('#sheet-status');
@@ -1305,13 +1302,29 @@ reload();
 // GPT Prompt 生成（依客戶 + 尺寸 + 模式）
 // ═══════════════════════════════════════════════════════════
 const PROMPT_TEMPLATES = {
-  dermacept: {
-    brand: 'Dermacept（日系藥妝品牌，主打高濃度純維他命C精華）',
+  'dermacept-vitaminc': {
+    brand: 'Dermacept 維他命C 系列（日系藥妝品牌，主打高濃度純維他命C精華）',
     colors: '深咖啡 #3D1E0E（主色約 60%）、香檳金 #B8893E / #D4A857（強調文字、金邊）、米白 #F5E6C8（背景）、警示紅 #C8102E（價格、急迫感）、粉嫩 #F4D8D0（柔和點綴）',
     colorsShort: '深咖啡 #3D1E0E + 香檳金 #B8893E + 米白 #F5E6C8',
     style: '日系極致精緻、高級藥妝感、奢華中帶純粹科學感',
     typography: '中文：Yu Mincho Demibold / 思源宋體；英文：Cormorant Garamond italic',
     ctaStyle: '深咖啡圓角矩形按鈕 + 香檳金箭頭 ▶▶'
+  },
+  'dermacept-stemlift': {
+    brand: 'Dermacept Stem Lift（日系藥妝抗老緊緻系列，源自 Obagi X / Frame Lift；主打植萃緊緻、撐紋拉提、熟齡基礎護膚）',
+    colors: '米金 #C9A876（瓶身呼應、主標、CTA，溫潤淺金，占 50%）、柔光金 #E8D9B8（背景漸層、空氣感，占 25%）、奶白 #FAF3E7（基底，占 20%）、警示紅 #C8102E（限時/折扣感，少量點綴，占 5%）',
+    colorsShort: '米金 #C9A876 + 柔光金 #E8D9B8 + 奶白',
+    style: '日系熟齡精緻、溫潤輕奢；強調拉提、彈韌、底蘊；比維他命C 更輕、更柔、更有空氣感',
+    typography: '中文：Yu Mincho Demibold / 思源宋體；英文：Cormorant Garamond italic（與母品牌一致）',
+    ctaStyle: '米金 #C9A876 圓角矩形按鈕 + 深咖啡文字 + 細金箭頭 ▶▶'
+  },
+  'dermacept-acid': {
+    brand: 'Dermacept 五重酸（日系藥妝品牌，主打日常溫和煥膚精華，含植酸/葡萄糖酸/檸檬酸/乳酸/甘醇酸五種酸）',
+    colors: '深海軍藍 #0A2A5E（呼應瓶身、主標、CTA、實體藥妝信任色，占 50%）、冰川灰藍 #A8C8DC（背景、漸層、空氣感留白，占 30%）、純白 #FFFFFF（基底，占 15%）、香檳金 #D4A857（獎項、星標、價格高亮，占 5%）、警示紅 #C8102E（限時/折扣感，少量點綴）',
+    colorsShort: '深海軍藍 #0A2A5E + 冰川灰藍 #A8C8DC + 純白',
+    style: '日系藥妝專業、深沉而清醒；強調溫和、可信賴、像實體藥局櫃上會看到的權威感',
+    typography: '中文：Yu Mincho Demibold / 思源宋體；英文：Cormorant Garamond italic（與母品牌一致）',
+    ctaStyle: '深海軍藍 #0A2A5E 圓角矩形按鈕 + 白色文字 + 細白箭頭 ▶▶'
   }
 };
 
