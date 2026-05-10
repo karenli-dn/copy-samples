@@ -304,6 +304,19 @@ select:focus { outline: none; border-color: var(--ink-black); }
   gap: 6px;
 }
 
+.btn-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+#festival-field {
+  transition: opacity 0.2s ease, max-height 0.3s ease;
+  overflow: hidden;
+}
+
+#festival-field.hidden {
+  display: none;
+}
+
 .opt-btn {
   padding: 10px 8px;
   background: var(--snow);
@@ -839,6 +852,23 @@ main {
         </div>
       </div>
 
+      <div class="field" id="festival-field">
+        <label class="field-label">Festival 檔期</label>
+        <div class="btn-grid btn-grid-3" id="festivals">
+          <button class="opt-btn active" data-val="*">不限</button>
+          <button class="opt-btn" data-val="母親節">母親節</button>
+          <button class="opt-btn" data-val="父親節">父親節</button>
+          <button class="opt-btn" data-val="情人節">情人節</button>
+          <button class="opt-btn" data-val="週年慶">週年慶</button>
+          <button class="opt-btn" data-val="雙11">雙11</button>
+          <button class="opt-btn" data-val="雙12">雙12</button>
+          <button class="opt-btn" data-val="聖誕">聖誕</button>
+          <button class="opt-btn" data-val="新春">新春</button>
+          <button class="opt-btn" data-val="生日月">生日月</button>
+          <button class="opt-btn" data-val="女神節">女神節</button>
+        </div>
+      </div>
+
       <div class="field">
         <label class="field-label">Tone 語氣</label>
         <div class="btn-grid" id="tones">
@@ -1029,7 +1059,7 @@ function filterParts(parts, category, scenario, tone, subcategory = null) {
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-function generate(parts, scenario, tone, count) {
+function generate(parts, scenario, tone, count, festival = '*') {
   const out = [];
   const seen = new Set();
   let attempts = 0;
@@ -1043,9 +1073,14 @@ function generate(parts, scenario, tone, count) {
     attempts++;
     const headlinePool = filterParts(parts, 'headline_4', scenario, tone);
     const subPool = filterParts(parts, 'sub', scenario, tone);
-    const prefixPool = filterParts(parts, 'prefix', scenario, tone);
+    let prefixPool = filterParts(parts, 'prefix', scenario, tone);
     const ctaPool = filterParts(parts, 'cta', scenario, tone);
     const pricePool = filterParts(parts, 'price_pattern', scenario, tone);
+
+    // 如果是節慶情境且使用者選了特定檔期，只保留該檔期的 prefix
+    if (scenario === 'festival' && festival && festival !== '*') {
+      prefixPool = prefixPool.filter(p => p.value === festival);
+    }
 
     if (!headlinePool.length || !subPool.length || !ctaPool.length) break;
 
@@ -1128,7 +1163,7 @@ function highlightPrice(s) { return s.replace(/\$([0-9,]+)/g, '$<span class="num
 function escAttr(s) { return s.replace(/"/g, '&quot;').replace(/\n/g, '&#10;'); }
 function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-let state = { client: 'dermacept', scenario: 'festival', tone: '*', count: 5, parts: null };
+let state = { client: 'dermacept', scenario: 'festival', tone: '*', festival: '*', count: 5, parts: null };
 
 function setStatus(type, title, detail) {
   const el = $('#sheet-status');
@@ -1166,15 +1201,34 @@ function bindGroup(id, key, parser = v => v) {
   });
 }
 
+// 控制檔期欄顯示/隱藏（只在「節慶」情境出現）
+function updateFestivalVisibility() {
+  const field = document.getElementById('festival-field');
+  if (state.scenario === 'festival') {
+    field.classList.remove('hidden');
+  } else {
+    field.classList.add('hidden');
+    // 切到非節慶時把選項重置為「不限」
+    state.festival = '*';
+    document.querySelectorAll('#festivals button').forEach(b => {
+      b.classList.toggle('active', b.dataset.val === '*');
+    });
+  }
+}
+
 bindGroup('scenarios', 'scenario');
 bindGroup('tones', 'tone');
 bindGroup('counts', 'count', parseInt);
+bindGroup('festivals', 'festival');
+
+// scenarios 切換時，連動檔期欄顯示
+document.getElementById('scenarios').addEventListener('click', updateFestivalVisibility);
 
 $('#client').addEventListener('change', (e) => { state.client = e.target.value; reload(); });
 $('#refresh').addEventListener('click', reload);
 $('#generate').addEventListener('click', () => {
   if (!state.parts) return;
-  const items = generate(state.parts, state.scenario, state.tone, state.count);
+  const items = generate(state.parts, state.scenario, state.tone, state.count, state.festival);
   renderResults(items);
   document.querySelector('main').scrollIntoView({ behavior: 'smooth', block: 'start' });
   // 範例產出後同步更新 prompt（讓 prompt 帶入第一筆主副標）
