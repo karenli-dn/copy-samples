@@ -17,14 +17,6 @@ headline_4,function,亮采淨白,*,*,亮白訴求
 headline_4,function,豐盈彈嫩,*,*,彈潤訴求
 headline_4,function,緊緻美肌,*,*,緊緻訴求
 headline_4,function,熟齡逆襲,*,*,熟齡訴求
-headline_4,luxury,緻禮尊享,festival,luxe,節慶限定
-headline_4,luxury,寵奢回饋,festival,luxe,節慶限定
-headline_4,luxury,尊榮鉅獻,festival,luxe,節慶限定
-headline_4,luxury,極選緻獻,festival,luxe,節慶限定
-headline_4,luxury,華貴禮讚,festival,luxe,節慶限定
-headline_4,luxury,華麗鉅惠,festival,luxe,節慶限定
-headline_4,luxury,雅緻獻禮,festival,luxe,節慶限定
-headline_4,luxury,豐潤獻禮,festival,luxe,節慶限定
 headline_4,time,一滴喚活,*,*,瞬效感
 headline_4,time,24H 修護,*,*,全天感
 headline_4,time,瞬效逆齡,*,*,瞬效感
@@ -46,12 +38,57 @@ headline_4,power,高純度結晶,award,clinical,科學感
 headline_4,power,專科級配方,*,clinical,專業感
 headline_4,power,研究所同款,*,clinical,專業感
 headline_4,power,皮膚科推薦,*,clinical,專業感
-headline_4,emotional,守護美麗,festival,*,情感訴求
-headline_4,emotional,綻放自信,*,*,情感訴求
-headline_4,emotional,寵愛自己,*,*,情感訴求
-headline_4,emotional,美麗無齡,*,*,情感訴求
-headline_4,emotional,自信由肌,*,*,情感訴求
-headline_4,emotional,光感人生,*,*,情感訴求
+headline_festival,母親節,媽媽值得被寵,festival,*,情感整句
+headline_festival,母親節,一年一度 獻給最美的她,festival,luxe,情感整句
+headline_festival,母親節,比起花 她想要更年輕的自己,festival,*,洞察整句
+headline_festival,母親節,妳的青春 媽媽都看見,festival,*,情感整句
+headline_festival,母親節,給她 不會枯萎的禮物,festival,*,巧思整句
+headline_festival,母親節,她說不用 但她值得擁有,festival,*,洞察整句
+headline_festival,母親節,媽媽的笑 比花更值得,festival,*,情感整句
+headline_festival,母親節,讓媽媽再次 為自己心動,festival,*,情感整句
+headline_festival,母親節,她寵愛全家 換我寵愛她,festival,*,情感整句
+headline_festival,母親節,從妳眼角 看見媽媽的時光,festival,*,洞察整句
+headline_festival,父親節,爸爸不説 但他也想被在乎,festival,*,情感整句
+headline_festival,父親節,他撐起家 換你撐起他,festival,*,情感整句
+headline_festival,父親節,給爸爸一份 不像領帶的禮物,festival,*,巧思整句
+headline_festival,父親節,爸爸老了 但他不必看起來那樣,festival,*,洞察整句
+headline_festival,父親節,他的歲月 值得一瓶好東西,festival,luxe,情感整句
+headline_festival,父親節,最沉默的愛 也想被聽見,festival,*,情感整句
+headline_festival,情人節,妳是他第一眼的光,festival,*,情感整句
+headline_festival,情人節,讓他再次 為妳怦然,festival,*,情感整句
+headline_festival,情人節,不只說我愛妳 給她真正想要的,festival,*,洞察整句
+headline_festival,情人節,她的美 值得最高規格,festival,luxe,奢華整句
+headline_festival,情人節,比鑽石更貼近她的肌膚,festival,luxe,奢華整句
+headline_festival,週年慶,一年最值得的一次,festival,luxe,週年慶
+headline_festival,週年慶,等了一整年 就為這幾天,festival,urgent,週年慶
+headline_festival,週年慶,妳的衣櫃可以等 妳的肌膚不行,festival,*,洞察整句
+headline_festival,週年慶,今年最後機會 別錯過自己,festival,urgent,週年慶
+headline_festival,週年慶,百貨第一名 不是沒有原因,festival,*,口碑整句
+headline_festival,週年慶,給自己 一年一次的奢侈,festival,luxe,奢華整句
+headline_festival,雙11,一年最後一次 真正的便宜,festival,urgent,雙11
+headline_festival,雙11,雙11不只買 還要買對,festival,*,洞察整句
+headline_festival,雙11,便宜很多 但不便宜,festival,*,文字遊戲
+headline_festival,雙11,最值得放購物車的那一瓶,festival,*,雙11
+headline_festival,雙11,別再湊單 直接買對的,festival,*,洞察整句
+headline_festival,雙12,雙11沒搶到 雙12補上,festival,urgent,雙12
+headline_festival,雙12,年底最後 一次升級保養,festival,urgent,年底
+headline_festival,雙12,今年的最後一瓶 留給自己,festival,*,情感整句
+headline_festival,聖誕,聖誕禮物 從鏡子裡開始,festival,*,巧思整句
+headline_festival,聖誕,今年聖誕 給自己放閃,festival,*,情感整句
+headline_festival,聖誕,最美的聖誕禮 是更亮的妳,festival,*,情感整句
+headline_festival,聖誕,給她的聖誕 不只巧克力,festival,*,巧思整句
+headline_festival,新春,新年要新 從肌膚開始,festival,*,新春
+headline_festival,新春,過年回家 讓媽媽多看妳一眼,festival,*,情感整句
+headline_festival,新春,新的一年 新的容光,festival,*,新春
+headline_festival,生日月,妳值得 寵愛自己一整月,festival,*,生日
+headline_festival,生日月,生日這個月 對自己好一點,festival,*,生日
+headline_festival,生日月,這個月 妳是主角,festival,*,生日
+headline_festival,女神節,女神不需要被定義,festival,*,女神節
+headline_festival,女神節,做自己的女神,festival,*,女神節
+headline_festival,女神節,她的光 從來不靠別人,festival,*,女神節
+headline_festival,通用,寵愛自己 不需要理由,festival,*,通用節慶
+headline_festival,通用,她值得 比花更久的禮物,festival,*,通用節慶
+headline_festival,通用,有些禮物 妳該留給自己,festival,*,通用節慶
 sub,product,高濃度純維他命C精華,*,*,標準產品介紹
 sub,product,極限美容液 25% 純維他命C,*,*,旗艦版
 sub,product,一滴逆轉肌齡 煥活年輕光彩,*,*,功效導向
@@ -79,16 +116,11 @@ sub,combo,早C晚A 黃金搭檔,*,clinical,組合產品
 sub,combo,C25旗艦+C5眼周組,*,*,組合產品
 sub,combo,純維他命C 全系列,*,*,系列產品
 sub,combo,日夜雙效修護組,*,*,組合產品
-prefix,festival,母親節,festival,*,
-prefix,festival,父親節,festival,*,
-prefix,festival,情人節,festival,*,
-prefix,festival,週年慶,festival,*,
-prefix,festival,雙11,festival,*,
-prefix,festival,雙12,festival,*,
-prefix,festival,聖誕,festival,*,
-prefix,festival,新春,festival,*,
-prefix,festival,生日月,festival,*,
-prefix,festival,女神節,festival,*,
+sub,festival_gift,母親節獻禮 一瓶寫給她的詩,festival,luxe,母親節副標
+sub,festival_gift,獻給她最值得的那一份,festival,luxe,通用節慶副標
+sub,festival_gift,把日本最好的 帶回來給她,festival,*,通用節慶副標
+sub,festival_gift,妳的心意 化作她的容光,festival,*,通用節慶副標
+sub,festival_gift,陪她重新 認識自己的美,festival,*,通用節慶副標
 prefix,general,限時,general,*,
 prefix,general,本週,general,*,
 prefix,general,春季,general,*,

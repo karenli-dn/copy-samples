@@ -711,6 +711,20 @@ main {
   font-weight: 400;
 }
 
+.select-wrap-inline {
+  min-width: 220px;
+}
+
+.select-wrap-inline select {
+  padding: 8px 32px 8px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.select-wrap-inline::after {
+  right: 12px;
+}
+
 .prompt-tab {
   padding: 7px 14px;
   background: var(--snow);
@@ -914,11 +928,19 @@ main {
     <div class="prompt-head">
       <div class="prompt-title-wrap">
         <div class="prompt-title">GPT 視覺生成 Prompt</div>
-        <div class="prompt-subtitle">業務找一張參考圖（圖二），複製下方 prompt，連同參考圖一起貼到 GPT</div>
+        <div class="prompt-subtitle">找一張參考圖（圖二），複製下方 prompt，連同參考圖一起貼到 GPT</div>
       </div>
     </div>
 
     <div class="prompt-controls">
+      <div class="prompt-control-group">
+        <span class="prompt-control-label">套用範例</span>
+        <div class="select-wrap select-wrap-inline">
+          <select id="prompt-sample-picker">
+            <option value="">尚未產生範例</option>
+          </select>
+        </div>
+      </div>
       <div class="prompt-control-group">
         <span class="prompt-control-label">尺寸</span>
         <div class="prompt-tab-row" id="prompt-size-tabs">
@@ -941,7 +963,7 @@ main {
     </div>
 
     <p class="prompt-hint">
-      💡 <strong>使用流程</strong>：① 上方產生範例 → ② 複製想要的主副標 → ③ 業務找一張「想要這種感覺」的參考圖 → ④ 複製下方 prompt → ⑤ 開 ChatGPT，<strong>把參考圖（標為圖二）+ prompt 一起傳給 GPT</strong>。<br>
+      💡 <strong>使用流程</strong>：① 上方產生範例 → ② 在「套用範例」選一組想用的 → ③ 找一張「想要這種感覺」的參考圖 → ④ 複製下方 prompt → ⑤ 開 ChatGPT，<strong>把參考圖（標為圖二）+ prompt 一起傳給 GPT</strong>。<br>
       <strong>簡短版</strong>適合 GPT-4o / Gemini 即時對話用；<strong>完整版</strong>適合 Midjourney / 嚴謹工作流用。
     </p>
   </section>
@@ -1069,46 +1091,86 @@ function generate(parts, scenario, tone, count, festival = '*') {
     priceValues[p.subcategory].push(p.value);
   });
 
-  while (out.length < count && attempts < count * 8) {
+  while (out.length < count && attempts < count * 12) {
     attempts++;
-    const headlinePool = filterParts(parts, 'headline_4', scenario, tone);
-    const subPool = filterParts(parts, 'sub', scenario, tone);
-    let prefixPool = filterParts(parts, 'prefix', scenario, tone);
+
     const ctaPool = filterParts(parts, 'cta', scenario, tone);
     const pricePool = filterParts(parts, 'price_pattern', scenario, tone);
-
-    // 如果是節慶情境且使用者選了特定檔期，只保留該檔期的 prefix
-    if (scenario === 'festival' && festival && festival !== '*') {
-      prefixPool = prefixPool.filter(p => p.value === festival);
-    }
-
-    if (!headlinePool.length || !subPool.length || !ctaPool.length) break;
-
-    const h4 = pick(headlinePool);
-    const sub = pick(subPool);
-    const prefix = prefixPool.length ? pick(prefixPool) : null;
+    if (!ctaPool.length) break;
     const cta = pick(ctaPool);
     const pattern = pricePool.length ? pick(pricePool) : { value: '' };
 
-    let headline;
-    if (scenario === 'award' && prefix) headline = prefix.value;
-    else if (prefix) headline = prefix.value + h4.value;
-    else headline = h4.value;
+    let headline, sub, h4Sub = '', subSub = '';
+
+    if (scenario === 'festival') {
+      // ━━━━━━━━━ 節慶模式：整句主標 ━━━━━━━━━
+      let festivalPool = parts.filter(p =>
+        p.category === 'headline_festival' &&
+        (p.tone === '*' || tone === '*' || p.tone === tone)
+      );
+
+      // 指定檔期 → 該檔期 + 通用整句都可用
+      if (festival && festival !== '*') {
+        festivalPool = festivalPool.filter(p =>
+          p.subcategory === festival || p.subcategory === '通用'
+        );
+      }
+
+      if (!festivalPool.length) break;
+      const festHeadline = pick(festivalPool);
+      headline = festHeadline.value;
+      h4Sub = festHeadline.subcategory;
+
+      // 節慶副標：優先用 festival_gift，沒有時 fallback 一般 sub
+      let subPool = parts.filter(p =>
+        p.category === 'sub' && p.subcategory === 'festival_gift' &&
+        (p.tone === '*' || tone === '*' || p.tone === tone)
+      );
+      if (!subPool.length) {
+        subPool = filterParts(parts, 'sub', scenario, tone);
+      }
+      if (!subPool.length) break;
+      const subPick = pick(subPool);
+      sub = subPick.value;
+      subSub = subPick.subcategory;
+
+    } else {
+      // ━━━━━━━━━ 一般/獎項/新品模式：四字 + 前綴 ━━━━━━━━━
+      const headlinePool = filterParts(parts, 'headline_4', scenario, tone);
+      const subPool = filterParts(parts, 'sub', scenario, tone);
+      const prefixPool = filterParts(parts, 'prefix', scenario, tone);
+      if (!headlinePool.length || !subPool.length) break;
+
+      const h4 = pick(headlinePool);
+      const subPick = pick(subPool);
+      const prefix = prefixPool.length ? pick(prefixPool) : null;
+      sub = subPick.value;
+      h4Sub = h4.subcategory;
+      subSub = subPick.subcategory;
+
+      if (scenario === 'award' && prefix) {
+        headline = prefix.value;
+      } else if (prefix) {
+        headline = prefix.value + h4.value;
+      } else {
+        headline = h4.value;
+      }
+    }
 
     const price = pattern.value.replace(/\$?\\?\$?\{\{(N\d)\}\}/g, (_, k) => {
       const pool = priceValues[k];
       return pool && pool.length ? pick(pool) : k;
     });
 
-    const key = headline + sub.value;
+    const key = headline + sub;
     if (seen.has(key)) continue;
     seen.add(key);
 
     out.push({
       num: out.length + 1,
       total: count,
-      headline, sub: sub.value, price, cta: cta.value,
-      tags: [scenario, h4.subcategory, sub.subcategory]
+      headline, sub, price, cta: cta.value,
+      tags: [scenario, h4Sub, subSub].filter(Boolean)
     });
   }
   return out;
@@ -1231,8 +1293,11 @@ $('#generate').addEventListener('click', () => {
   const items = generate(state.parts, state.scenario, state.tone, state.count, state.festival);
   renderResults(items);
   document.querySelector('main').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  // 範例產出後同步更新 prompt（讓 prompt 帶入第一筆主副標）
-  setTimeout(() => renderPrompt(), 100);
+  // 範例產出後同步更新選單 + prompt
+  setTimeout(() => {
+    updateSamplePicker();
+    renderPrompt();
+  }, 100);
 });
 
 reload();
@@ -1264,18 +1329,19 @@ const SIZE_SPECS = {
   }
 };
 
-function getSampleCopy() {
+function getSampleCopy(index = 0) {
   const root = document.querySelector('#results');
-  const firstCard = root ? root.querySelector('.card') : null;
+  const cards = root ? root.querySelectorAll('.card') : [];
   let sampleHeadline = '【請先在上方產生範例，這裡會自動帶入主標】';
   let sampleSub = '【副標】';
   let samplePrice = '';
   let sampleCta = '';
-  if (firstCard) {
-    const h = firstCard.querySelector('.card-headline');
-    const sub = firstCard.querySelector('.card-sub');
-    const price = firstCard.querySelector('.card-price');
-    const cta = firstCard.querySelector('.card-cta');
+  const card = cards[index];
+  if (card) {
+    const h = card.querySelector('.card-headline');
+    const sub = card.querySelector('.card-sub');
+    const price = card.querySelector('.card-price');
+    const cta = card.querySelector('.card-cta');
     if (h) sampleHeadline = h.textContent.trim();
     if (sub) sampleSub = sub.textContent.trim();
     if (price) samplePrice = price.textContent.trim();
@@ -1284,11 +1350,11 @@ function getSampleCopy() {
   return { sampleHeadline, sampleSub, samplePrice, sampleCta };
 }
 
-function buildPromptShort(client, sizeKey) {
+function buildPromptShort(client, sizeKey, sampleIndex = 0) {
   const t = PROMPT_TEMPLATES[client];
   const s = SIZE_SPECS[sizeKey];
   if (!t || !s) return '';
-  const { sampleHeadline, sampleSub, samplePrice, sampleCta } = getSampleCopy();
+  const { sampleHeadline, sampleSub, samplePrice, sampleCta } = getSampleCopy(sampleIndex);
 
   return `請參考我上傳的「圖二（風格參考）」的氛圍，幫我做一張 ${sizeKey} 的 ${t.brand.split('（')[0]} 電商視覺。
 
@@ -1303,11 +1369,11 @@ function buildPromptShort(client, sizeKey) {
 請保留圖二的氛圍與構圖手法，但配色與細節要對齊上面的品牌規範。`;
 }
 
-function buildPromptLong(client, sizeKey) {
+function buildPromptLong(client, sizeKey, sampleIndex = 0) {
   const t = PROMPT_TEMPLATES[client];
   const s = SIZE_SPECS[sizeKey];
   if (!t || !s) return '';
-  const { sampleHeadline, sampleSub, samplePrice, sampleCta } = getSampleCopy();
+  const { sampleHeadline, sampleSub, samplePrice, sampleCta } = getSampleCopy(sampleIndex);
 
   return `請為「${t.brand}」設計一張 ${sizeKey} 的電商視覺。
 
@@ -1344,22 +1410,57 @@ ${t.ctaStyle}
 - 若參考圖二與品牌規範衝突，以「品牌規範」為主、「參考圖氛圍」為輔`;
 }
 
-function buildPrompt(client, sizeKey, mode) {
+function buildPrompt(client, sizeKey, mode, sampleIndex = 0) {
   return mode === 'long'
-    ? buildPromptLong(client, sizeKey)
-    : buildPromptShort(client, sizeKey);
+    ? buildPromptLong(client, sizeKey, sampleIndex)
+    : buildPromptShort(client, sizeKey, sampleIndex);
 }
 
 const $promptBox = document.querySelector('#prompt-content');
 const $promptCopy = document.querySelector('#prompt-copy');
 const $promptSizeTabs = document.querySelector('#prompt-size-tabs');
 const $promptModeTabs = document.querySelector('#prompt-mode-tabs');
-let promptState = { size: '1080x1080', mode: 'short' };
+const $promptSamplePicker = document.querySelector('#prompt-sample-picker');
+let promptState = { size: '1080x1080', mode: 'short', sampleIndex: 0 };
 
 function renderPrompt() {
-  const text = buildPrompt(state.client, promptState.size, promptState.mode);
+  const text = buildPrompt(state.client, promptState.size, promptState.mode, promptState.sampleIndex);
   $promptBox.textContent = text;
 }
+
+// 更新範例選單（每次產生範例後呼叫）
+function updateSamplePicker() {
+  const root = document.querySelector('#results');
+  const cards = root ? root.querySelectorAll('.card') : [];
+
+  if (!cards.length) {
+    $promptSamplePicker.innerHTML = '<option value="">尚未產生範例</option>';
+    promptState.sampleIndex = 0;
+    return;
+  }
+
+  const opts = [];
+  cards.forEach((card, idx) => {
+    const h = card.querySelector('.card-headline');
+    const headlineText = h ? h.textContent.trim() : `第 ${idx + 1} 組`;
+    // 截斷過長標題
+    const display = headlineText.length > 18
+      ? headlineText.substring(0, 18) + '…'
+      : headlineText;
+    opts.push(`<option value="${idx}">${String(idx + 1).padStart(2, '0')} · ${display}</option>`);
+  });
+  $promptSamplePicker.innerHTML = opts.join('');
+
+  // 重置選到第一個
+  promptState.sampleIndex = 0;
+  $promptSamplePicker.value = '0';
+}
+
+$promptSamplePicker.addEventListener('change', (e) => {
+  const v = e.target.value;
+  promptState.sampleIndex = v === '' ? 0 : parseInt(v);
+  renderPrompt();
+});
 
 $promptSizeTabs.addEventListener('click', (e) => {
   const b = e.target.closest('.prompt-tab');
